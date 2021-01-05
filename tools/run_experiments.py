@@ -3,7 +3,11 @@ import os
 import yaml
 from ast import literal_eval as make_tuple
 from subprocess import PIPE, STDOUT, Popen
-
+import sys
+sys.path.insert(1, '/home/vinhloiit/projects/few-shot-object-detection')
+'''
+PYTHONPATH=. python tools/run_experiments.py --num-gpus 1 --shots 1 3 --seeds 1 2
+'''
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -26,10 +30,6 @@ def parse_args():
                         help='Fine-tune novel weights first')
     parser.add_argument('--unfreeze', action='store_true',
                         help='Unfreeze feature extractor')
-    # PASCAL arguments
-    parser.add_argument('--split', '-s', type=int, default=1, help='Data split')
-    # COCO arguments
-    parser.add_argument('--coco', action='store_true', help='Use COCO dataset')
 
     args = parser.parse_args()
     return args
@@ -78,59 +78,23 @@ def get_config(seed, shot):
     config file that is used for training/evaluation.
     You can extend/modify this function to fit your use-case.
     """
-    if args.coco:
-        # COCO
-        assert args.two_stage, 'Only supports novel weights for COCO now'
+    # PASCAL VOC
+    assert not args.two_stage, 'Only supports random weights for PASCAL now'
 
-        if args.novel_finetune:
-            # Fine-tune novel classifier
-            ITERS = {
-                1: (10000, 500),
-                2: (10000, 1500),
-                3: (10000, 1500),
-                5: (10000, 1500),
-                10: (10000, 2000),
-                30: (10000, 6000),
-            }
-            mode = 'novel'
+    ITERS = {
+        1: (3500, 4000),
+        2: (7000, 8000),
+        3: (10500, 12000),
+        5: (17500, 20000),
+        10: (35000, 40000),
+    }
+    mode = 'all1'
+    temp_split = 'split1'
+    temp_mode = 'all1'
 
-            assert not args.fc and not args.unfreeze
-        else:
-            # Fine-tune entire classifier
-            ITERS = {
-                1: (14400, 16000),
-                2: (28800, 32000),
-                3: (43200, 48000),
-                5: (72000, 80000),
-                10: (144000, 160000),
-                30: (216000, 240000),
-            }
-            mode = 'all'
-        split = temp_split = ''
-        temp_mode = mode
-
-        config_dir = 'configs/COCO-detection'
-        ckpt_dir = 'checkpoints/coco/faster_rcnn'
-        base_cfg = '../../Base-RCNN-FPN.yaml'
-    else:
-        # PASCAL VOC
-        assert not args.two_stage, 'Only supports random weights for PASCAL now'
-
-        ITERS = {
-            1: (3500, 4000),
-            2: (7000, 8000),
-            3: (10500, 12000),
-            5: (17500, 20000),
-            10: (35000, 40000),
-        }
-        split = 'split{}'.format(args.split)
-        mode = 'all{}'.format(args.split)
-        temp_split = 'split1'
-        temp_mode = 'all1'
-
-        config_dir = 'configs/PascalVOC-detection'
-        ckpt_dir = 'checkpoints/voc/faster_rcnn'
-        base_cfg = '../../../Base-RCNN-FPN.yaml'
+    config_dir = 'configs/PascalVOC-detection'
+    ckpt_dir = 'checkpoints/digits_voc/faster_rcnn'
+    base_cfg = '../../../Base-RCNN-FPN.yaml'
 
     seed_str = 'seed{}'.format(seed) if seed != 0 else ''
     fc = '_fc' if args.fc else ''
@@ -145,11 +109,9 @@ def get_config(seed, shot):
     prefix = 'faster_rcnn_R_101_FPN_ft{}_{}_{}shot{}{}'.format(
         fc, mode, shot, unfreeze, args.suffix)
 
-    output_dir = os.path.join(args.root, ckpt_dir, seed_str)
+    output_dir = os.path.join(args.root, ckpt_dir)
     os.makedirs(output_dir, exist_ok=True)
-    save_dir = os.path.join(
-        args.root, config_dir, split, seed_str,
-    )
+    save_dir = os.path.join(args.root, config_dir)
     os.makedirs(save_dir, exist_ok=True)
     save_file = os.path.join(save_dir, prefix + '.yaml')
 
@@ -157,33 +119,9 @@ def get_config(seed, shot):
     configs['_BASE_'] = base_cfg
     configs['DATASETS']['TRAIN'] = make_tuple(configs['DATASETS']['TRAIN'])
     configs['DATASETS']['TEST'] = make_tuple(configs['DATASETS']['TEST'])
-    if args.coco and not args.novel_finetune:
-        ckpt_path = os.path.join(output_dir, prefix, 'model_reset_combine.pth')
-        if not os.path.exists(ckpt_path):
-            src2 = os.path.join(
-                output_dir, 'faster_rcnn_R_101_FPN_ft_novel_{}shot{}'.format(
-                    shot, args.suffix),
-                'model_final.pth',
-            )
-            if not os.path.exists(src2):
-                print('Novel weights do not exist. Please run with the ' + \
-                      '--novel-finetune flag first.')
-                assert False
-            combine_cmd = 'python tools/ckpt_surgery.py --coco --method ' + \
-                'combine --src1 checkpoints/coco/faster_rcnn/faster_rcnn' + \
-                '_R_101_FPN_base/model_final.pth --src2 {}'.format(src2) + \
-                ' --save-dir {}'.format(os.path.join(output_dir, prefix))
-            run_cmd(combine_cmd)
-            assert os.path.exists(ckpt_path)
-        configs['MODEL']['WEIGHTS'] = ckpt_path
-    elif not args.coco:
-        configs['MODEL']['WEIGHTS'] = configs['MODEL']['WEIGHTS'].replace(
-            'base1', 'base' + str(args.split))
-        for dset in ['TRAIN', 'TEST']:
-            configs['DATASETS'][dset] = (
-                configs['DATASETS'][dset][0].replace(
-                    temp_mode, 'all' + str(args.split)),
-            )
+    configs['MODEL']['WEIGHTS'] = configs['MODEL']['WEIGHTS']
+    for dset in ['TRAIN', 'TEST']:
+        configs['DATASETS'][dset] = (configs['DATASETS'][dset][0], )
     configs['DATASETS']['TRAIN'] = (
         configs['DATASETS']['TRAIN'][0].replace(
             '1shot', str(shot) + 'shot'
@@ -203,11 +141,16 @@ def get_config(seed, shot):
 
 
 def main(args):
-    for shot in args.shots:
-        for seed in range(args.seeds[0], args.seeds[1]):
-            print('Split: {}, Seed: {}, Shot: {}'.format(args.split, seed, shot))
-            cfg, configs = get_config(seed, shot)
-            run_exp(cfg, configs)
+    # for shot in args.shots:
+    #     for seed in range(args.seeds[0], args.seeds[1]):
+    #         print('Seed: {}, Shot: {}'.format(seed, shot))
+    #         cfg, configs = get_config(seed, shot)
+    #         run_exp(cfg, configs)
+    seed = 1
+    shot = 1
+    print('Seed: {}, Shot: {}'.format(seed, shot))
+    cfg, configs = get_config(seed, shot)
+    run_exp(cfg, configs)
 
 
 if __name__ == '__main__':

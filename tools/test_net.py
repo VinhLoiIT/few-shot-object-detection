@@ -31,7 +31,8 @@ from detectron2.data import MetadataCatalog
 from detectron2.engine import hooks, launch
 from fsdet.evaluation import (
     COCOEvaluator, DatasetEvaluators, LVISEvaluator, PascalVOCDetectionEvaluator, verify_results)
-
+import sys
+sys.path.insert(1, '/home/vinhloiit/projects/few-shot-object-detection/')
 
 class Trainer(DefaultTrainer):
     """
