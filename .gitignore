@@ -41,3 +41,5 @@ configs/*/*/seed*/*
 
 .vscode-upload.json
 .mypy_cache
+
+.vscode
