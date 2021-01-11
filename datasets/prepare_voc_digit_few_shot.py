@@ -14,8 +14,39 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--seeds", type=int, nargs="+", default=[1, 20],
                         help="Range of seeds")
+    parser.add_argument('--ext', type=str, default='png')
+    parser.add_argument('--train-size', type=float, default=0.75)
     args = parser.parse_args()
     return args
+
+
+def generate_train_val_split(args):
+    def train_val_split(paths, seed, train_size):
+        random.seed(seed)
+        paths = paths[:]  # Clone paths
+        random.shuffle(paths)
+        num_train_sample = np.ceil(train_size * len(paths)).astype(np.int)
+        return paths[:num_train_sample], paths[num_train_sample:]               
+
+    # /home/lvloi/few-shot-object-detection/datasets/voc_digits/JPEGImages
+    image_dir = Path(DIGIT_DIRNAME).joinpath('JPEGImages')
+    output_dir = Path(DIGIT_DIRNAME).joinpath('ImageSets/Main')
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_train_path = output_dir.joinpath('train.txt')
+    output_val_path = output_dir.joinpath('val.txt')
+
+
+    image_paths = sorted(list(image_dir.glob(f'*.{args.ext}')))
+    image_names = [path.name for path in image_paths]
+    train_paths, val_paths = train_val_split(image_names, args.seeds[0], args.train_size)
+
+    with open(output_train_path, 'wt') as f:
+        for line in train_paths:
+            print(line, file=f)
+
+    with open(output_val_path, 'wt') as f:
+        for line in val_paths:
+            print(line, file=f)
 
 
 def generate_seeds(args):
@@ -62,4 +93,5 @@ def generate_seeds(args):
 
 if __name__ == '__main__':
     args = parse_args()
-    generate_seeds(args)
+    generate_train_val_split(args)
+    # generate_seeds(args)
