@@ -26,9 +26,8 @@ def generate_train_val_split(args):
         paths = paths[:]  # Clone paths
         random.shuffle(paths)
         num_train_sample = np.ceil(train_size * len(paths)).astype(np.int)
-        return paths[:num_train_sample], paths[num_train_sample:]               
+        return paths[:num_train_sample], paths[num_train_sample:]
 
-    # /home/lvloi/few-shot-object-detection/datasets/voc_digits/JPEGImages
     image_dir = Path(DIGIT_DIRNAME).joinpath('JPEGImages')
     output_dir = Path(DIGIT_DIRNAME).joinpath('ImageSets/Main')
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -37,7 +36,7 @@ def generate_train_val_split(args):
 
 
     image_paths = sorted(list(image_dir.glob(f'*.{args.ext}')))
-    image_names = [path.name for path in image_paths]
+    image_names = [path.stem for path in image_paths]
     train_paths, val_paths = train_val_split(image_names, args.seeds[0], args.train_size)
 
     with open(output_train_path, 'wt') as f:

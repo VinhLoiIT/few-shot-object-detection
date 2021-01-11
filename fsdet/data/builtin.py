@@ -286,6 +286,7 @@ def register_digits_voc(root="datasets"):
 
     # register meta datasets
     METASPLITS = [
+        ("digits_train", "train"),
         ("digits_val", "val"),
     ]
 
@@ -306,7 +307,7 @@ def register_digits_voc(root="datasets"):
             os.path.join(root, 'voc_digits'),
             split
         )
-        MetadataCatalog.get(name).evaluator_type = "digits_voc"
+        MetadataCatalog.get(name).evaluator_type = "digits"
 
 # Register them all under "./datasets"
 register_all_coco()

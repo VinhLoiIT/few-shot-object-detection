@@ -23,7 +23,7 @@ from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.data import MetadataCatalog
 from detectron2.engine import launch
 from fsdet.evaluation import (
-    COCOEvaluator, DatasetEvaluators, LVISEvaluator, PascalVOCDetectionEvaluator, verify_results)
+    COCOEvaluator, DatasetEvaluators, LVISEvaluator, PascalVOCDetectionEvaluator, DigitsDetectionEvaluator, verify_results)
 
 
 class Trainer(DefaultTrainer):
@@ -52,6 +52,8 @@ class Trainer(DefaultTrainer):
             )
         if evaluator_type == "pascal_voc":
             return PascalVOCDetectionEvaluator(dataset_name)
+        if evaluator_type == 'digits':
+            return DigitsDetectionEvaluator(dataset_name)
         if evaluator_type == "lvis":
             return LVISEvaluator(dataset_name, cfg, True, output_folder)
         if len(evaluator_list) == 0:
