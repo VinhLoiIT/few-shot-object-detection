@@ -24,6 +24,7 @@ from .builtin_meta import _get_builtin_metadata
 from .meta_coco import register_meta_coco
 from .meta_lvis import register_meta_lvis
 from .meta_pascal_voc import register_meta_pascal_voc
+from .meta_digits_voc import register_meta_digits_voc
 
 # ==== Predefined datasets and splits for COCO ==========
 
@@ -267,7 +268,48 @@ def register_all_pascal_voc(root="datasets"):
         MetadataCatalog.get(name).evaluator_type = "pascal_voc"
 
 
+# ==== Predefined splits for PASCAL VOC ===========
+def register_digits_voc(root="datasets"):
+    # SPLITS = [
+    #     ("voc_2007_trainval", "VOC2007", "trainval"),
+    #     ("voc_2007_train", "VOC2007", "train"),
+    #     ("voc_2007_val", "VOC2007", "val"),
+    #     ("voc_2007_test", "VOC2007", "test"),
+    #     ("voc_2012_trainval", "VOC2012", "trainval"),
+    #     ("voc_2012_train", "VOC2012", "train"),
+    #     ("voc_2012_val", "VOC2012", "val"),
+    # ]
+    # for name, dirname, split in SPLITS:
+    #     year = 2007 if "2007" in name else 2012
+    #     register_pascal_voc(name, os.path.join(root, dirname), split, year)
+    #     MetadataCatalog.get(name).evaluator_type = "pascal_voc"
+
+    # register meta datasets
+    METASPLITS = [
+        ("digits_val", "val"),
+    ]
+
+    # register small meta datasets for fine-tuning stage
+    for k in [1, 2, 3, 5, 10]:
+        for seed in range(100):
+            seed = "" if seed == 0 else "_seed{}".format(seed)
+            name = f"digits_train_{k}shot{seed}"
+            split = f"{k}shot_train{seed}"
+            METASPLITS.append(
+                (name, split)
+            )
+
+    for name, split in METASPLITS:
+        register_meta_digits_voc(
+            name,
+            _get_builtin_metadata("digits_voc_fewshot"),
+            os.path.join(root, 'voc_digits'),
+            split
+        )
+        MetadataCatalog.get(name).evaluator_type = "digits_voc"
+
 # Register them all under "./datasets"
 register_all_coco()
 register_all_lvis()
 register_all_pascal_voc()
+register_digits_voc()

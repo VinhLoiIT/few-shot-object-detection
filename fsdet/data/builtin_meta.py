@@ -455,6 +455,13 @@ def _get_pascal_voc_fewshot_instances_meta():
     return ret
 
 
+def _get_digits_instances_meta():
+    ret = {
+        'classes': [str(i) for i in range(0, 10)] + ['-'],
+    }
+    return ret
+
+
 def _get_builtin_metadata(dataset_name):
     if dataset_name == "coco":
         return _get_coco_instances_meta()
@@ -466,4 +473,6 @@ def _get_builtin_metadata(dataset_name):
         return _get_lvis_fewshot_instances_meta_v0_5()
     elif dataset_name == "pascal_voc_fewshot":
         return _get_pascal_voc_fewshot_instances_meta()
+    elif dataset_name == 'digits_voc_fewshot':
+        return _get_digits_instances_meta()
     raise KeyError("No built-in metadata for dataset {}".format(dataset_name))
