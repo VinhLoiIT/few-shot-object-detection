@@ -28,6 +28,11 @@ datasets/vocsplit
 datasets/lvis
 datasets/lvissplit
 datasets/*/seed*
+datasets/VOC*
+
+# digits datasets
+datasets/voc_digits
+datasets/digits_fewshot.zip
 
 # configs
 configs/Test
