@@ -76,20 +76,23 @@ def generate_seeds(args):
             c_data = []
             for j, shot in enumerate(shots):
                 diff_shot = shots[j] - shots[j-1] if j != 0 else 1
-                shots_c = random.sample(data_per_cat[c], diff_shot)
-                num_objs = 0
-                for s in shots_c:
-                    if s not in c_data:
-                        tree = ET.parse(s)
-                        file = tree.find("filename").text
-                        name = DIGIT_DIRNAME.joinpath('JPEGImages', file)
-                        c_data.append(name)
-                        for obj in tree.findall("object"):
-                            if obj.find("name").text == c:
-                                num_objs += 1
-                        if num_objs >= diff_shot:
-                            break
-                result[c][shot] = copy.deepcopy(c_data)
+                if len(data_per_cat[c]) <= shot:
+                    result[c][shot] = copy.deepcopy(data_per_cat[c])
+                else:
+                    shots_c = random.sample(data_per_cat[c], diff_shot)
+                    num_objs = 0
+                    for s in shots_c:
+                        if s not in c_data:
+                            tree = ET.parse(s)
+                            file = tree.find("filename").text
+                            name = DIGIT_DIRNAME.joinpath('JPEGImages', file)
+                            c_data.append(name)
+                            for obj in tree.findall("object"):
+                                if obj.find("name").text == c:
+                                    num_objs += 1
+                            if num_objs >= diff_shot:
+                                break
+                    result[c][shot] = copy.deepcopy(c_data)
         save_path = Path(args.output_dir).joinpath(f'seed{i}')
         save_path.mkdir(parents=True, exist_ok=True)
         for c in result.keys():
