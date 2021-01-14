@@ -10,13 +10,23 @@ import xml.etree.ElementTree as ET
 DIGIT_CLASSES = [str(i) for i in range(0, 10)] + ['-', 'UNK1', 'UNK2']
 DIGIT_DIRNAME = Path('datasets/voc_digits')
 
+
 def parse_args():
+    global DIGIT_CLASSES
+    global DIGIT_DIRNAME
     parser = argparse.ArgumentParser()
+    parser.add_argument('data_dir', type=str)
+    parser.add_argument('output_dir', type=str)
     parser.add_argument("--seeds", type=int, nargs="+", default=[1, 20],
                         help="Range of seeds")
     parser.add_argument('--ext', type=str, default='png')
     parser.add_argument('--train-size', type=float, default=0.75)
     args = parser.parse_args()
+
+    DIGIT_DIRNAME = Path(args.data_dir)
+    lines = [line.strip() for line in open(
+        DIGIT_DIRNAME.joinpath('class_names.txt'), 'rt').readlines()]
+    DIGIT_CLASSES = lines[1:]  # ignore __background__ class
     return args
 
 
@@ -33,7 +43,6 @@ def generate_train_val_split(args):
     output_dir.mkdir(parents=True, exist_ok=True)
     output_train_path = output_dir.joinpath('train.txt')
     output_val_path = output_dir.joinpath('val.txt')
-
 
     image_paths = sorted(list(image_dir.glob(f'*.{args.ext}')))
     image_names = [path.stem for path in image_paths]
@@ -81,7 +90,7 @@ def generate_seeds(args):
                         if num_objs >= diff_shot:
                             break
                 result[c][shot] = copy.deepcopy(c_data)
-        save_path = Path(f'datasets/digit_vocsplit/seed{i}')
+        save_path = Path(args.output_dir).joinpath(f'seed{i}')
         save_path.mkdir(parents=True, exist_ok=True)
         for c in result.keys():
             for shot in result[c].keys():
@@ -93,4 +102,4 @@ def generate_seeds(args):
 if __name__ == '__main__':
     args = parse_args()
     generate_train_val_split(args)
-    # generate_seeds(args)
+    generate_seeds(args)
