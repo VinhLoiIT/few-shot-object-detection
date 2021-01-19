@@ -1,6 +1,5 @@
 import numpy as np
 
-import os
 import xml.etree.ElementTree as ET
 from detectron2.data import DatasetCatalog, MetadataCatalog
 from detectron2.structures import BoxMode

@@ -9,6 +9,7 @@ from detectron2.modeling.postprocessing import detector_postprocess
 from detectron2.modeling.proposal_generator import build_proposal_generator
 from detectron2.structures import ImageList
 from detectron2.utils.logger import log_first_n
+# import torchvision.utils as utils
 
 # avoid conflicting with the existing GeneralizedRCNN module in Detectron2
 from .build import META_ARCH_REGISTRY
@@ -194,6 +195,7 @@ class GeneralizedRCNN(nn.Module):
         images = ImageList.from_tensors(
             images, self.backbone.size_divisibility
         )
+        # utils.save_image(images.tensor, 'a.png')
         return images
 
 
