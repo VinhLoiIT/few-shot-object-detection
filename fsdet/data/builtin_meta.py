@@ -457,7 +457,7 @@ def _get_pascal_voc_fewshot_instances_meta():
 
 def _get_digits_instances_meta():
     ret = {
-        'classes': [str(i) for i in range(0, 10)] + ['-'],
+        'classes': [str(i) for i in range(0, 10)] + ['-', 'U', 'O'],
     }
     return ret
 

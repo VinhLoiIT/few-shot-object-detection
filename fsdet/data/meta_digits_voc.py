@@ -33,9 +33,8 @@ def load_filtered_voc_instances(
                 fileids_ = np.loadtxt(f, dtype=np.str).tolist()
                 if isinstance(fileids_, str):
                     fileids_ = [fileids_]
-                fileids_ = [
-                    fid.split("/")[-1].split(".jpg")[0] for fid in fileids_
-                ]
+                fileids_ = [Path(fid).stem for fid in fileids_]
+                print(fileids_)
                 fileids[cls] = fileids_
     else:
         with dirname.joinpath("ImageSets", "Main", split + ".txt") as f:
@@ -48,7 +47,7 @@ def load_filtered_voc_instances(
             for fileid in fileids_:
                 dirname = Path("datasets").joinpath("voc_digits")
                 anno_file = dirname.joinpath("Annotations", fileid + ".xml")
-                jpeg_file = dirname.joinpath("JPEGImages", fileid + ".jpg")
+                jpeg_file = dirname.joinpath("JPEGImages", fileid + ".png")
 
                 tree = ET.parse(anno_file)
 
@@ -85,7 +84,7 @@ def load_filtered_voc_instances(
     else:
         for fileid in fileids:
             anno_file = dirname.joinpath("Annotations", fileid + ".xml")
-            jpeg_file = dirname.joinpath("JPEGImages", fileid + ".jpg")
+            jpeg_file = dirname.joinpath("JPEGImages", fileid + ".png")
 
             tree = ET.parse(anno_file)
 
