@@ -6,6 +6,7 @@ import glob
 import multiprocessing as mp
 import os
 import time
+from pathlib import Path
 
 from demo.predictor import VisualizationDemo
 from detectron2.data.detection_utils import read_image
@@ -50,6 +51,8 @@ def get_parser():
     )
     parser.add_argument(
         "--output",
+        type=Path,
+        default=None,
         help="A file or directory to save output visualizations. "
         "If not given, will show output in an OpenCV window.",
     )
@@ -101,17 +104,15 @@ if __name__ == "__main__":
                 )
             )
 
-            if args.output:
-                if os.path.isdir(args.output):
-                    assert os.path.isdir(args.output), args.output
-                    out_filename = os.path.join(
-                        args.output, os.path.basename(path)
-                    )
-                else:
-                    assert (
-                        len(args.input) == 1
-                    ), "Please specify a directory with args.output"
+            p = Path()
+            p.is_dir()
+            if args.output is not None:
+                if len(args.input) == 1:
+                    args.output.parent.mkdir(exists=True, parents=True)
                     out_filename = args.output
+                else:
+                    args.output.mkdir(exists=True, parents=True)
+                    out_filename = args.output.joinpath(Path(path).name)
                 visualized_output.save(out_filename)
             else:
                 cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
